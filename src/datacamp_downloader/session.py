@@ -35,7 +35,27 @@ class Session:
     def _setup_driver(self, headless=True):
         self._playwright = sync_playwright().start()
         self._browser = self._playwright.chromium.launch(headless=headless)
-        self._context = self._browser.new_context()
+
+         # Check for proxy in environment variables
+        http_proxy = os.environ.get('http_proxy') or os.environ.get('HTTP_PROXY')
+        https_proxy = os.environ.get('https_proxy') or os.environ.get('HTTPS_PROXY')
+
+        proxy_settings = None
+        if http_proxy or https_proxy:
+            proxy_settings = {
+                'server': http_proxy or https_proxy,
+                # Optional: if your proxy requires authentication
+                # 'username': 'your_proxy_username',
+                # 'password': 'your_proxy_password'
+            }
+            print(f'use this proxy: {proxy_settings}')
+            
+            self._context = self._browser.new_context(
+                proxy=proxy_settings
+            )
+        else:
+            # Launch browser with or without proxy
+            self._context = self._browser.new_context()
         self.driver = self._context.new_page()
 
     def start(self, headless=False):
